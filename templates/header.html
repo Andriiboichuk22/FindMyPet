@@ -1,0 +1,12 @@
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<header>
+    <a href="{{ url_for('home') }}">
+  <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo">
+    </a><div>
+ <form action="{{ url_for('add') }}" method="get" class="add_advert">
+        <button type="submit"> Додати оголошення</button>
+    </form>
+    <a href="{{url_for('login')}}">Вхід/Реєстрація</a></div>
+</header>

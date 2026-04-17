@@ -1,0 +1,42 @@
+/* body */
+*{
+padding: 0;
+margin: 0;
+}
+body{
+    background: beige;
+}
+/* header */
+header{
+    display: flex;
+    flex-direction: row ;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+}
+header div {
+    display: flex;
+    flex-direction: row;
+    gap:10px;
+    align-items: center;
+    margin-right: 2%;
+}
+.logo{
+    width: 20%;
+    height: 20%;
+}
+header a{
+    color: black;
+    text-decoration: none;
+    font-size: 16px;
+}
+header button{
+   background-color: #ff8c00;
+    color: white;
+    padding: 10px 20px;     
+    border-radius: 8px;      
+    border: none;             
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
