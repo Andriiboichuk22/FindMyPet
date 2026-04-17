@@ -1,12 +1,34 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Find My Pet</title>
-</head>
-<body>
 {% include "header.html" %}
-<main>
-   
-</main>
-</body>
-</html>
+
+<div class="cards">
+
+{% for pet in pets %}
+<div class="card">
+
+    {% if pet.photo %}
+        <img src="{{ url_for('static', filename='uploads/' + pet.photo) }}">
+    {% endif %}
+
+    <div class="card-body">
+
+        <span class="badge {% if pet.status == 'Зниклий' %}lost{% else %}found{% endif %}">
+            {{ pet.status }}
+        </span>
+
+        <h3>{{ pet.title }}</h3>
+
+        <p>{{ pet.animal_type }} | {{ pet.breed }}</p>
+        <p>{{ pet.location }}</p>
+
+    </div>
+
+</div>
+{% endfor %}
+
+</div>
+<div id="lightbox" class="lightbox">
+    <span class="close">&times;</span>
+    <img id="lightbox-img" src="">
+</div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>

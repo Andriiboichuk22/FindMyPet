@@ -1,13 +1,67 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Додати оголошення</title>
-</head>
-<body>
+{% include "header.html" %}
 
-    {% include "header.html" %}
+<h1>Створити нове оголошення</h1>
 
-    <h1>Створення оголошення</h1>
+<form method="POST" enctype="multipart/form-data" class="form">
 
-</body>
-</html>
+    <!-- 1. Тип -->
+    <div class="block">
+        <h3>1. Тип оголошення</h3>
+
+        <div class="type_adverts">
+            <label class="type_btn red">
+                <input type="radio" name="status" value="Зниклий" checked>
+                <span>Зник</span>
+            </label>
+
+            <label class="type_btn green">
+                <input type="radio" name="status" value="Знайдений">
+                <span>Знайдено</span>
+            </label>
+        </div>
+    </div>
+
+    <!-- 2. Основна інформація -->
+    <div class="block">
+        <h3>2. Основна інформація</h3>
+
+        <select name="animal_type">
+            <option value="Пес">Пес</option>
+            <option value="Кіт">Кіт</option>
+        </select>
+
+        <input type="text" name="breed" placeholder="Порода">
+        <input type="text" name="age" placeholder="Вік">
+    </div>
+
+    <!-- 3. Локація -->
+    <div class="block">
+        <h3>3. Геолокація</h3>
+
+        <input type="text" name="location" placeholder="Місто">
+        <input type="text" name="date" placeholder="Дата">
+    </div>
+
+    <!-- 4. Опис -->
+    <div class="block">
+        <h3>Опис</h3>
+        <textarea name="description"></textarea>
+    </div>
+
+    <!-- 5. Фото -->
+    <div class="block">
+        <h3>Фото</h3>
+        <input type="file" name="photo">
+    </div>
+
+    <!-- 6. Контакти -->
+    <div class="block">
+        <h3>Контакти</h3>
+
+        <input type="text" name="title" placeholder="Назва оголошення">
+        <input type="text" name="phone" placeholder="Телефон">
+    </div>
+
+    <button type="submit" class="submit_btn">Опублікувати</button>
+
+</form>

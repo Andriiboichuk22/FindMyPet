@@ -40,3 +40,135 @@ header button{
     font-weight: 600;
     cursor: pointer;
 }
+.fl-col{
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+    align-content: center;
+}
+/* add_advert */
+.form {
+    width: 70%;
+    margin: auto;
+}
+
+.block {
+    background: white;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 10px;
+}
+
+.type_adverts {
+    display: flex;
+    gap: 10px;
+}
+
+.type_btn input {
+    display: none;
+}
+
+.type_btn span {
+    padding: 10px 20px;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+.red span {
+    background: #ffd6d6;
+}
+
+.green span {
+    background: #d6ffd6;
+}
+
+.red input:checked + span {
+    background: red;
+    color: white;
+}
+
+.green input:checked + span {
+    background: green;
+    color: white;
+}
+
+input, textarea, select {
+    display: block;
+    margin: 10px 0;
+    padding: 8px;
+    width: 100%;
+}
+
+.submit_btn {
+    background: #0a6c74;
+    color: white;
+    padding: 12px;
+    border: none;
+    width: 100%;
+    border-radius: 8px;
+}
+.cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    padding: 20px;
+}
+
+.card {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.card img {
+   width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+
+}
+
+.card-body {
+    padding: 10px;
+}
+
+.badge {
+    padding: 5px 10px;
+    border-radius: 6px;
+    color: white;
+}
+
+.lost {
+    background: red;
+}
+
+.found {
+    background: green;
+}
+.lightbox {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.9);
+    justify-content: center;
+    align-items: center;
+}
+
+.lightbox img {
+    max-width: 95%;
+    max-height: 95%;
+    border-radius: 10px;
+}
+
+.lightbox .close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 40px;
+    color: white;
+    cursor: pointer;
+}
