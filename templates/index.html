@@ -127,6 +127,42 @@
                         <span class="author">
                             Автор: {{ pet.user.username if pet.user else "анонім" }}
                         </span>
+
+                        <section class="comment-section">
+                            <div class="comment-section__header">
+                                <h4>Відгуки</h4>
+                                <span>{{ pet.comments|length }}</span>
+                            </div>
+
+                            {% if pet.comments %}
+                            <div class="comment-list">
+                                {% for comment in pet.comments|sort(attribute='created_at', reverse=True) %}
+                                {% if loop.index <= 3 %}
+                                <article class="comment-item">
+                                    <div class="comment-item__meta">
+                                        <strong>{{ comment.user.username if comment.user else "користувач" }}</strong>
+                                        <span>{{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                                    </div>
+                                    <p>{{ comment.content }}</p>
+                                </article>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <p class="comment-empty">Поки що ніхто не залишав відгук.</p>
+                            {% endif %}
+
+                            {% if current_user %}
+                            <form method="POST" action="{{ url_for('add_comment', pet_id=pet.id, **filters) }}" class="comment-form">
+                                <textarea name="content" placeholder="Наприклад: бачив у цьому районі сьогодні вранці" required></textarea>
+                                <button type="submit" class="btn btn-secondary">Надіслати відгук</button>
+                            </form>
+                            {% else %}
+                            <p class="comment-login-note">
+                                <a href="{{ url_for('login') }}">Увійдіть</a>, щоб залишити відгук.
+                            </p>
+                            {% endif %}
+                        </section>
                     </div>
                 </article>
                 {% endfor %}

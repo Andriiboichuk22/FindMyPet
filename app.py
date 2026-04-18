@@ -1,4 +1,5 @@
 from functools import wraps
+from datetime import datetime
 import os
 import secrets
 from uuid import uuid4
@@ -138,6 +139,7 @@ class User(db.Model):
     is_username_auto = db.Column(db.Boolean, nullable=False, default=False)
 
     pets = db.relationship('Pet', backref='user', lazy=True)
+    comments = db.relationship('Comment', backref='user', lazy=True)
 
 
 # =========================
@@ -156,6 +158,15 @@ class Pet(db.Model):
     phone = db.Column(db.String(20))
     photo = db.Column(db.String(200))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    comments = db.relationship('Comment', backref='pet', lazy=True, cascade='all, delete-orphan')
+
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    pet_id = db.Column(db.Integer, db.ForeignKey('pet.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 
 def ensure_user_columns():
@@ -229,6 +240,28 @@ def home():
         'location': location_filter,
     }
     return render_template('index.html', pets=pets, filters=filters)
+
+
+@app.route('/pets/<int:pet_id>/comments', methods=['POST'])
+@login_required
+def add_comment(pet_id):
+    pet = Pet.query.get_or_404(pet_id)
+    current_user = get_current_user()
+    content = request.form['content'].strip()
+
+    if not content:
+        flash('Відгук не може бути порожнім')
+        return redirect(url_for('home', **request.args))
+
+    comment = Comment(
+        content=content,
+        pet_id=pet.id,
+        user_id=current_user.id,
+    )
+    db.session.add(comment)
+    db.session.commit()
+    flash('Відгук додано')
+    return redirect(url_for('home', **request.args))
 
 
 # =========================
