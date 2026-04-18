@@ -1,43 +1,59 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, session, flash
 from flask_sqlalchemy import SQLAlchemy
-from flask import session, flash
 import os
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__)  
+app = Flask(__name__)
 
+# CONFIG
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.secret_key = "secret_key_123"
 
 UPLOAD_FOLDER = 'static/uploads'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER  
-app.secret_key = "secret_key_123"
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 db = SQLAlchemy(app)
 
-# МОДЕЛЬ
+# =========================
+# USER MODEL
+# =========================
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
 
+    # 🔥 зворотний зв'язок (опціонально)
+    pets = db.relationship('Pet', backref='user', lazy=True)
+
+
+# =========================
+# PET MODEL
+# =========================
 class Pet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
 
-    status = db.Column(db.String(50), nullable=False)   # Зниклий / Знайдений
-    animal_type = db.Column(db.String(50))              # Пес / Кіт
-    breed = db.Column(db.String(100))                   # Порода
-    age = db.Column(db.String(50))                      # Вік
+    status = db.Column(db.String(50), nullable=False)
+    animal_type = db.Column(db.String(50))
+    breed = db.Column(db.String(100))
+    age = db.Column(db.String(50))
 
-    location = db.Column(db.String(100))                # Місто
-    date = db.Column(db.String(50))                     # Дата
+    location = db.Column(db.String(100))
+    date = db.Column(db.String(50))
+    phone = db.Column(db.String(20))
 
-    phone = db.Column(db.String(20))                    # Телефон
-    photo = db.Column(db.String(200))                   # шлях до фото
+    photo = db.Column(db.String(200))
 
-# ГОЛОВНА СТОРІНКА
+    # 🔥 зв’язок з користувачем
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+
+# =========================
+# HOME
+# =========================
 @app.route('/')
 def home():
     pets = Pet.query.all()
@@ -48,7 +64,9 @@ def home():
     )
 
 
-# ДОДАВАННЯ (GET + POST)
+# =========================
+# ADD PET
+# =========================
 @app.route('/add', methods=['GET', 'POST'])
 def add():
     if request.method == 'POST':
@@ -73,7 +91,9 @@ def add():
             date=request.form['date'],
             phone=request.form['phone'],
 
-            photo=filename
+            photo=filename,
+            
+            user_id=session.get('user_id')
         )
 
         db.session.add(pet)
@@ -84,10 +104,13 @@ def add():
     return render_template('add.html')
 
 
-# ЛОГІН
+# =========================
+# LOGIN
+# =========================
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
+
         username = request.form['username']
         password = request.form['password']
 
@@ -102,14 +125,19 @@ def login():
 
     return render_template('login.html')
 
-#Реєстрація
+
+# =========================
+# REGISTER
+# =========================
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
 
-        user = User(username=username, password=password)
+        user = User(
+            username=request.form['username'],
+            password=request.form['password']
+        )
+
         db.session.add(user)
         db.session.commit()
 
@@ -117,12 +145,19 @@ def register():
 
     return render_template('register.html')
 
+
+# =========================
+# LOGOUT
+# =========================
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect('/')
 
-# ЗАПУСК
+
+# =========================
+# RUN APP
+# =========================
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()

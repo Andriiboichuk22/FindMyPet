@@ -141,7 +141,13 @@ input, textarea, select {
 .lost {
     background: red;
 }
-
+.author {
+    background: #e9f5ff;
+    color: #0077cc;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+}
 .found {
     background: green;
 }

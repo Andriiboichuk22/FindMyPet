@@ -11,16 +11,18 @@
 
     <div class="card-body">
 
-        <span class="badge {% if pet.status == 'Зниклий' %}lost{% else %}found{% endif %}">
-            {{ pet.status }}
-        </span>
+    <span class="badge ...">{{ pet.status }}</span>
 
-        <h3>{{ pet.title }}</h3>
+    <h3>{{ pet.title }}</h3>
 
-        <p>{{ pet.animal_type }} | {{ pet.breed }}</p>
-        <p>{{ pet.location }}</p>
+    <p>{{ pet.animal_type }} | {{ pet.breed }}</p>
+    <p>{{ pet.location }}</p>
 
-    </div>
+</div>
+
+<div class="card-footer">
+    <span class="author">👤 {{ pet.user.username if pet.user else "анонім" }}</span>
+</div>
 
 </div>
 {% endfor %}
