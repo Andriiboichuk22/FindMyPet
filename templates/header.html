@@ -10,8 +10,11 @@
             <a class="site-nav__link site-nav__link--accent" href="{{ url_for('add') }}">Додати оголошення</a>
 
             {% if user %}
-            <a class="site-nav__user" href="/cabinet">{{ user }}</a>
-            <a class="site-nav__link" href="/logout">Вийти</a>
+            {% if current_user and current_user.is_admin %}
+            <a class="site-nav__link" href="{{ url_for('admin_panel') }}">Адмінка</a>
+            {% endif %}
+            <a class="site-nav__user" href="{{ url_for('cabinet') }}">{{ user }}</a>
+            <a class="site-nav__link" href="{{ url_for('logout') }}">Вийти</a>
             {% else %}
             <a class="site-nav__link" href="{{ url_for('login') }}">Вхід</a>
             <a class="site-nav__link" href="{{ url_for('register') }}">Реєстрація</a>

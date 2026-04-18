@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FindMyPet | Підтвердження пошти</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="page page-auth page-resend-verification">
+    {% include "header.html" %}
+
+    <main class="page-main auth-page">
+        <section class="auth-shell auth-shell--reverse">
+            <div class="auth-hero auth-hero--warm">
+                <span class="section-tag">Підтвердження пошти</span>
+                <h1>Надішлемо новий лист, якщо ви ще не підтвердили email.</h1>
+                <p>
+                    Вкажіть ту саму пошту, яку використали під час реєстрації. Якщо акаунт існує
+                    і ще не підтверджений, ми повторно надішлемо посилання.
+                </p>
+
+                <ul class="auth-list">
+                    <li>Перевірте також папки “Спам” або “Промоакції”.</li>
+                    <li>Посилання з листа має обмежений строк дії.</li>
+                    <li>Після підтвердження пошти ви зможете увійти в акаунт.</li>
+                </ul>
+            </div>
+
+            <section class="auth-card">
+                <div class="auth-panel">
+                    <h2>Надіслати лист ще раз</h2>
+                    <p class="auth-subtitle">Введіть email і ми повторимо відправку листа для підтвердження.</p>
+
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="flash-message">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" class="auth-form">
+                        <div class="field">
+                            <label for="email">Email</label>
+                            <input id="email" type="email" name="email" placeholder="name@example.com" required>
+                        </div>
+
+                        <button class="submit_btn" type="submit">Надіслати ще раз</button>
+                    </form>
+
+                    <p class="auth-switch">
+                        Уже підтвердили пошту?
+                        <a href="{{ url_for('login') }}">Повернутися до входу</a>
+                    </p>
+                </div>
+            </section>
+        </section>
+    </main>
+</body>
+</html>

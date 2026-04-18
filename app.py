@@ -44,6 +44,10 @@ PASSWORD_RESET_SALT = os.getenv('PASSWORD_RESET_SALT') or getattr(config, 'PASSW
 PASSWORD_RESET_EXPIRES_MINUTES = int(
     os.getenv('PASSWORD_RESET_EXPIRES_MINUTES') or getattr(config, 'PASSWORD_RESET_EXPIRES_MINUTES', 30)
 )
+EMAIL_VERIFICATION_SALT = os.getenv('EMAIL_VERIFICATION_SALT') or getattr(config, 'EMAIL_VERIFICATION_SALT', 'email-verification-salt')
+EMAIL_VERIFICATION_EXPIRES_HOURS = int(
+    os.getenv('EMAIL_VERIFICATION_EXPIRES_HOURS') or getattr(config, 'EMAIL_VERIFICATION_EXPIRES_HOURS', 24)
+)
 
 db = SQLAlchemy(app)
 oauth = None
@@ -167,12 +171,54 @@ def verify_password_reset_token(token):
     return User.query.filter_by(email=email).first()
 
 
+def generate_email_verification_token(user):
+    serializer = get_token_serializer()
+    return serializer.dumps(user.email, salt=EMAIL_VERIFICATION_SALT)
+
+
+def verify_email_verification_token(token):
+    serializer = get_token_serializer()
+    email = serializer.loads(
+        token,
+        salt=EMAIL_VERIFICATION_SALT,
+        max_age=EMAIL_VERIFICATION_EXPIRES_HOURS * 3600,
+    )
+    return User.query.filter_by(email=email).first()
+
+
+def send_email_verification(user):
+    verification_token = generate_email_verification_token(user)
+    verification_link = url_for('verify_email', token=verification_token, _external=True)
+    email_body = (
+        'Підтвердіть свою пошту для FindMyPet.\n\n'
+        f'Перейдіть за посиланням:\n{verification_link}\n\n'
+        f'Посилання дійсне {EMAIL_VERIFICATION_EXPIRES_HOURS} годин.\n'
+        'Якщо ви не створювали акаунт, просто проігноруйте цей лист.'
+    )
+    send_email_message('FindMyPet - підтвердження пошти', user.email, email_body)
+
+
 def login_required(view_func):
     @wraps(view_func)
     def wrapped_view(*args, **kwargs):
         if not session.get('user_id'):
             flash('Спочатку увійдіть у свій акаунт')
             return redirect(url_for('login'))
+        return view_func(*args, **kwargs)
+
+    return wrapped_view
+
+
+def admin_required(view_func):
+    @wraps(view_func)
+    def wrapped_view(*args, **kwargs):
+        current_user = get_current_user()
+        if not current_user:
+            flash('Спочатку увійдіть у свій акаунт')
+            return redirect(url_for('login'))
+        if not current_user.is_admin:
+            flash('Доступ до адмінки мають лише адміністратори')
+            return redirect(url_for('home'))
         return view_func(*args, **kwargs)
 
     return wrapped_view
@@ -215,9 +261,11 @@ class User(db.Model):
     phone = db.Column(db.String(20))
     photo = db.Column(db.String(200))
     email = db.Column(db.String(255), unique=True)
+    is_email_verified = db.Column(db.Boolean, nullable=False, default=True)
     google_id = db.Column(db.String(255), unique=True)
     auth_provider = db.Column(db.String(20), nullable=False, default='local')
     is_username_auto = db.Column(db.Boolean, nullable=False, default=False)
+    is_admin = db.Column(db.Boolean, nullable=False, default=False)
 
     pets = db.relationship('Pet', backref='user', lazy=True)
     comments = db.relationship('Comment', backref='user', lazy=True)
@@ -260,9 +308,11 @@ def ensure_user_columns():
         'phone': 'ALTER TABLE user ADD COLUMN phone VARCHAR(20)',
         'photo': 'ALTER TABLE user ADD COLUMN photo VARCHAR(200)',
         'email': 'ALTER TABLE user ADD COLUMN email VARCHAR(255)',
+        'is_email_verified': 'ALTER TABLE user ADD COLUMN is_email_verified BOOLEAN DEFAULT 1 NOT NULL',
         'google_id': 'ALTER TABLE user ADD COLUMN google_id VARCHAR(255)',
         'auth_provider': "ALTER TABLE user ADD COLUMN auth_provider VARCHAR(20) DEFAULT 'local' NOT NULL",
         'is_username_auto': 'ALTER TABLE user ADD COLUMN is_username_auto BOOLEAN DEFAULT 0 NOT NULL',
+        'is_admin': 'ALTER TABLE user ADD COLUMN is_admin BOOLEAN DEFAULT 0 NOT NULL',
     }
 
     for column_name, statement in statements.items():
@@ -271,6 +321,37 @@ def ensure_user_columns():
 
     db.session.execute(text("UPDATE user SET auth_provider = 'local' WHERE auth_provider IS NULL OR auth_provider = ''"))
     db.session.execute(text("UPDATE user SET is_username_auto = 0 WHERE is_username_auto IS NULL"))
+    db.session.execute(text("UPDATE user SET is_email_verified = 1 WHERE is_email_verified IS NULL"))
+    db.session.execute(text("UPDATE user SET is_admin = 0 WHERE is_admin IS NULL"))
+    db.session.commit()
+
+
+def ensure_admin_user():
+    admin_user = User.query.filter_by(username='admin').first()
+
+    if not admin_user:
+        admin_user = User.query.filter_by(email='findmypetadmin@gmail.com').first()
+
+    if admin_user:
+        admin_user.username = 'admin'
+        admin_user.is_admin = True
+        admin_user.email = admin_user.email or 'findmypetadmin@gmail.com'
+        admin_user.auth_provider = admin_user.auth_provider or 'local'
+        admin_user.is_username_auto = False
+        admin_user.is_email_verified = True
+        admin_user.password = hash_password('admin')
+    else:
+        admin_user = User(
+            username='admin',
+            password=hash_password('admin'),
+            email='findmypetadmin@gmail.com',
+            auth_provider='local',
+            is_email_verified=True,
+            is_username_auto=False,
+            is_admin=True,
+        )
+        db.session.add(admin_user)
+
     db.session.commit()
 
 
@@ -279,6 +360,7 @@ def init_app_data():
     with app.app_context():
         db.create_all()
         ensure_user_columns()
+        ensure_admin_user()
 
 
 # =========================
@@ -386,11 +468,20 @@ def add():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username'].strip()
+        login_value = request.form['username'].strip()
         password = request.form['password']
-        user = User.query.filter_by(username=username).first()
+        search_value = normalize_email(login_value)
+        user = User.query.filter(
+            or_(
+                User.username == login_value,
+                User.email == search_value,
+            )
+        ).first()
 
         if verify_password(user, password):
+            if user.auth_provider == 'local' and user.email and not user.is_email_verified:
+                flash('Спочатку підтвердіть пошту. Ми надіслали вам лист із посиланням.')
+                return redirect(url_for('resend_verification'))
             if user.password == password:
                 user.password = hash_password(password)
                 db.session.commit()
@@ -418,7 +509,7 @@ def forgot_password():
             return render_template('forgot_password.html')
 
         user = User.query.filter_by(email=email).first()
-        if user and user.auth_provider == 'local':
+        if user and user.auth_provider == 'local' and user.is_email_verified:
             token = generate_password_reset_token(user)
             reset_link = url_for('reset_password', token=token, _external=True)
             email_body = (
@@ -438,6 +529,54 @@ def forgot_password():
         return redirect(url_for('login'))
 
     return render_template('forgot_password.html')
+
+
+@app.route('/verify-email/<token>')
+def verify_email(token):
+    try:
+        user = verify_email_verification_token(token)
+    except SignatureExpired:
+        flash('Посилання для підтвердження пошти вже неактивне. Запросіть нове.')
+        return redirect(url_for('resend_verification'))
+    except BadSignature:
+        flash('Некоректне посилання для підтвердження пошти.')
+        return redirect(url_for('login'))
+
+    if not user or user.auth_provider != 'local':
+        flash('Підтвердження пошти для цього акаунта недоступне.')
+        return redirect(url_for('login'))
+
+    user.is_email_verified = True
+    db.session.commit()
+    flash('Пошту підтверджено. Тепер ви можете увійти.')
+    return redirect(url_for('login'))
+
+
+@app.route('/resend-verification', methods=['GET', 'POST'])
+def resend_verification():
+    if request.method == 'POST':
+        email = normalize_email(request.form['email'])
+
+        if not email:
+            flash('Вкажіть email')
+            return render_template('resend_verification.html')
+
+        if not is_mail_configured():
+            flash('Надсилання листів ще не налаштоване. Додайте SMTP-параметри в config.py.')
+            return render_template('resend_verification.html')
+
+        user = User.query.filter_by(email=email).first()
+        if user and user.auth_provider == 'local' and not user.is_email_verified:
+            try:
+                send_email_verification(user)
+            except Exception:
+                flash('Не вдалося надіслати листа. Перевірте SMTP-налаштування пошти.')
+                return render_template('resend_verification.html')
+
+        flash('Якщо акаунт існує і пошта ще не підтверджена, ми надіслали новий лист.')
+        return redirect(url_for('login'))
+
+    return render_template('resend_verification.html')
 
 
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
@@ -573,6 +712,7 @@ def register():
             password=hash_password(password),
             email=email,
             auth_provider='local',
+            is_email_verified=False,
             is_username_auto=False,
         )
 
@@ -584,7 +724,16 @@ def register():
             flash('Логін або email уже зайнятий')
             return render_template('register.html')
 
-        flash('Акаунт створено. Тепер увійдіть у систему')
+        if is_mail_configured():
+            try:
+                send_email_verification(user)
+            except Exception:
+                flash('Акаунт створено, але лист підтвердження не вдалося надіслати. Спробуйте ще раз пізніше.')
+                return redirect(url_for('resend_verification'))
+
+            flash('Акаунт створено. Перевірте пошту й підтвердьте email перед входом.')
+        else:
+            flash('Акаунт створено, але надсилання листів ще не налаштоване. Зверніться до адміністратора.')
         return redirect(url_for('login'))
 
     return render_template('register.html')
@@ -633,7 +782,12 @@ def cabinet():
     if request.method == 'POST':
         new_username = request.form['username'].strip()
         new_email = normalize_email(request.form['email'])
+        email_changed = new_email != (current_user.email or '')
         current_user.phone = request.form['phone'].strip()
+
+        if current_user.auth_provider == 'local' and email_changed and not is_mail_configured():
+            flash('Спочатку налаштуйте пошту для сайту, щоб змінювати email із підтвердженням.')
+            return redirect(url_for('cabinet'))
 
         if not new_email:
             flash('Вкажіть email')
@@ -651,6 +805,8 @@ def cabinet():
 
         current_user.username = new_username
         current_user.email = new_email
+        if current_user.auth_provider == 'local' and email_changed:
+            current_user.is_email_verified = False
         current_user.is_username_auto = False
 
         file = request.files.get('photo')
@@ -659,8 +815,17 @@ def cabinet():
 
         try:
             db.session.commit()
+            if current_user.auth_provider == 'local' and email_changed and is_mail_configured():
+                try:
+                    send_email_verification(current_user)
+                except Exception:
+                    flash('Email оновлено, але лист підтвердження не вдалося надіслати.')
+                    return redirect(url_for('cabinet'))
             set_logged_in_user(current_user)
-            flash('Профіль оновлено')
+            if current_user.auth_provider == 'local' and email_changed:
+                flash('Профіль оновлено. Підтвердьте нову пошту через лист.')
+            else:
+                flash('Профіль оновлено')
         except IntegrityError:
             db.session.rollback()
             flash('Логін або email уже зайнятий')
@@ -669,6 +834,13 @@ def cabinet():
 
     user_pets = Pet.query.filter_by(user_id=current_user.id).order_by(Pet.id.desc()).all()
     return render_template('cabinet.html', profile_user=current_user, user_pets=user_pets)
+
+
+@app.route('/admin')
+@admin_required
+def admin_panel():
+    pets = Pet.query.order_by(Pet.id.desc()).all()
+    return render_template('admin.html', pets=pets)
 
 @app.route('/pets/<int:pet_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -708,13 +880,16 @@ def delete_pet(pet_id):
     current_user = get_current_user()
     pet = Pet.query.get_or_404(pet_id)
 
-    if pet.user_id != current_user.id:
-        flash('Р’Рё РЅРµ РјРѕР¶РµС‚Рµ РІРёРґР°Р»РёС‚Рё С†Рµ РѕРіРѕР»РѕС€РµРЅРЅСЏ')
+    if pet.user_id != current_user.id and not current_user.is_admin:
+        flash('Ви не можете видалити це оголошення')
         return redirect(url_for('cabinet'))
 
     db.session.delete(pet)
     db.session.commit()
-    flash('РћРіРѕР»РѕС€РµРЅРЅСЏ РІРёРґР°Р»РµРЅРѕ')
+    flash('Оголошення видалено')
+
+    if current_user.is_admin and pet.user_id != current_user.id:
+        return redirect(url_for('admin_panel'))
     return redirect(url_for('cabinet'))
 
 
