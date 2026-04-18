@@ -8,6 +8,7 @@ from flask import Flask, flash, redirect, render_template, request, session, url
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_, text
 from sqlalchemy.exc import IntegrityError
+from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
 import config
@@ -85,6 +86,26 @@ def get_current_user():
 def set_logged_in_user(user):
     session['user_id'] = user.id
     session['username'] = user.username
+
+
+def hash_password(password):
+    return generate_password_hash(password)
+
+
+def verify_password(user, password):
+    if not user or not user.password:
+        return False
+
+    stored_password = user.password
+
+    # Keep old plain-text records working, then upgrade them after a successful login.
+    if stored_password == password:
+        return True
+
+    if stored_password.startswith('scrypt:') or stored_password.startswith('pbkdf2:'):
+        return check_password_hash(stored_password, password)
+
+    return False
 
 
 def login_required(view_func):
@@ -308,9 +329,13 @@ def login():
         username = request.form['username'].strip()
         password = request.form['password']
 
-        user = User.query.filter_by(username=username, password=password).first()
 
-        if user:
+        user = User.query.filter_by(username=username).first()
+
+        if verify_password(user, password):
+            if user.password == password:
+                user.password = hash_password(password)
+                db.session.commit()
             set_logged_in_user(user)
             if user.is_username_auto:
                 return redirect(url_for('complete_profile'))
@@ -395,6 +420,10 @@ def register():
         username = request.form['username'].strip()
         password = request.form['password']
 
+        if len(password) < 8:
+            flash('Пароль має містити щонайменше 8 символів')
+            return render_template('register.html')
+
         existing_user = User.query.filter_by(username=username).first()
         if existing_user:
             flash('Користувач з таким логіном уже існує')
@@ -402,7 +431,7 @@ def register():
 
         user = User(
             username=username,
-            password=password,
+            password=hash_password(password),
             auth_provider='local',
             is_username_auto=False,
         )
@@ -554,3 +583,4 @@ init_app_data()
 
 if __name__ == '__main__':
     app.run(debug=True)
+
