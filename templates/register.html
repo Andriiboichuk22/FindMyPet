@@ -1,16 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
+    <title>FindMyPet | Реєстрація</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
-      {% include "header.html" %}
-     <form method="POST">
-    <input type="text" name="username" placeholder="Логін">
-    <input type="password" name="password" placeholder="Пароль">
-    <button type="submit">Реєстрація</button>
-</form>
+<body class="page page-auth page-auth-register">
+    {% include "header.html" %}
+
+    <main class="page-main auth-page">
+        <section class="auth-shell auth-shell--reverse">
+            <div class="auth-hero auth-hero--warm">
+                <span class="section-tag">Новий акаунт</span>
+                <h1>Створіть профіль і долучайтесь до допомоги тваринам.</h1>
+                <p>
+                    Після реєстрації ви зможете публікувати оголошення, зберігати свої контакти
+                    та швидко повертатися до всіх своїх записів.
+                </p>
+
+                <ul class="auth-list">
+                    <li>Оформлюйте оголошення в єдиному зручному форматі.</li>
+                    <li>Швидко залишайте контакти для зворотного зв'язку.</li>
+                    <li>Будуйте довіру через впорядкований особистий профіль.</li>
+                </ul>
+            </div>
+
+            <section class="auth-card">
+                <div class="auth-panel">
+                    <h2>Створення акаунта</h2>
+                    <p class="auth-subtitle">Заповніть базові дані, щоб отримати доступ до всіх можливостей сервісу.</p>
+
+                    <form method="POST" class="auth-form">
+                        <div class="field">
+                            <label for="username">Логін</label>
+                            <input id="username" type="text" name="username" placeholder="Оберіть логін" required>
+                        </div>
+
+                        <div class="field">
+                            <label for="password">Пароль</label>
+                            <input id="password" type="password" name="password" placeholder="Створіть пароль" required>
+                        </div>
+
+                        <button class="submit_btn" type="submit">Зареєструватися</button>
+                    </form>
+
+                    <p class="auth-switch">
+                        Уже маєте акаунт?
+                        <a href="{{ url_for('login') }}">Увійти</a>
+                    </p>
+                </div>
+            </section>
+        </section>
+    </main>
 </body>
 </html>

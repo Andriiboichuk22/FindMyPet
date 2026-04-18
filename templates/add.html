@@ -1,67 +1,145 @@
-{% include "header.html" %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FindMyPet | Додати оголошення</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="page page-add">
+    {% include "header.html" %}
 
-<h1>Створити нове оголошення</h1>
+    <main class="page-main">
+        <section class="form-hero">
+            <span class="section-tag">Нове оголошення</span>
+            <h1>Розкажіть про тварину так, щоб її було легше впізнати.</h1>
+            <p>
+                Заповніть основні деталі, додайте фото й контакти. Чим точніша інформація,
+                тим швидше люди зможуть допомогти.
+            </p>
+        </section>
 
-<form method="POST" enctype="multipart/form-data" class="form">
+        <form method="POST" enctype="multipart/form-data" class="pet-form">
+            <section class="form-block">
+                <div class="form-block__header">
+                    <span class="form-step">1</span>
+                    <div>
+                        <h2>Тип оголошення</h2>
+                        <p>Вкажіть, ви шукаєте тварину чи повідомляєте про знайдену.</p>
+                    </div>
+                </div>
 
-    <!-- 1. Тип -->
-    <div class="block">
-        <h3>1. Тип оголошення</h3>
+                <div class="type_adverts">
+                    <label class="type_btn red">
+                        <input type="radio" name="status" value="Зниклий" checked>
+                        <span>Зник</span>
+                    </label>
 
-        <div class="type_adverts">
-            <label class="type_btn red">
-                <input type="radio" name="status" value="Зниклий" checked>
-                <span>Зник</span>
-            </label>
+                    <label class="type_btn green">
+                        <input type="radio" name="status" value="Знайдений">
+                        <span>Знайдено</span>
+                    </label>
+                </div>
+            </section>
 
-            <label class="type_btn green">
-                <input type="radio" name="status" value="Знайдений">
-                <span>Знайдено</span>
-            </label>
-        </div>
-    </div>
+            <section class="form-block">
+                <div class="form-block__header">
+                    <span class="form-step">2</span>
+                    <div>
+                        <h2>Основна інформація</h2>
+                        <p>Опишіть тварину коротко й зрозуміло.</p>
+                    </div>
+                </div>
 
-    <!-- 2. Основна інформація -->
-    <div class="block">
-        <h3>2. Основна інформація</h3>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="title">Назва оголошення</label>
+                        <input id="title" type="text" name="title" placeholder="Наприклад: Загубився рудий кіт" required>
+                    </div>
 
-        <select name="animal_type">
-            <option value="Пес">Пес</option>
-            <option value="Кіт">Кіт</option>
-        </select>
+                    <div class="field">
+                        <label for="animal_type">Тип тварини</label>
+                        <select id="animal_type" name="animal_type">
+                            <option value="Пес">Пес</option>
+                            <option value="Кіт">Кіт</option>
+                        </select>
+                    </div>
 
-        <input type="text" name="breed" placeholder="Порода">
-        <input type="text" name="age" placeholder="Вік">
-    </div>
+                    <div class="field">
+                        <label for="breed">Порода</label>
+                        <input id="breed" type="text" name="breed" placeholder="Наприклад: Лабрадор">
+                    </div>
 
-    <!-- 3. Локація -->
-    <div class="block">
-        <h3>3. Геолокація</h3>
+                    <div class="field">
+                        <label for="age">Вік</label>
+                        <input id="age" type="text" name="age" placeholder="Наприклад: 2 роки">
+                    </div>
+                </div>
+            </section>
 
-        <input type="text" name="location" placeholder="Місто">
-        <input type="text" name="date" placeholder="Дата">
-    </div>
+            <section class="form-block">
+                <div class="form-block__header">
+                    <span class="form-step">3</span>
+                    <div>
+                        <h2>Локація та дата</h2>
+                        <p>Це допоможе людям орієнтуватися, де й коли бачили тварину.</p>
+                    </div>
+                </div>
 
-    <!-- 4. Опис -->
-    <div class="block">
-        <h3>Опис</h3>
-        <textarea name="description"></textarea>
-    </div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="location">Місто або район</label>
+                        <input id="location" type="text" name="location" placeholder="Наприклад: Київ, Оболонь" required>
+                    </div>
 
-    <!-- 5. Фото -->
-    <div class="block">
-        <h3>Фото</h3>
-        <input type="file" name="photo">
-    </div>
+                    <div class="field">
+                        <label for="date">Дата</label>
+                        <input id="date" type="text" name="date" placeholder="Наприклад: 18.04.2026" required>
+                    </div>
+                </div>
+            </section>
 
-    <!-- 6. Контакти -->
-    <div class="block">
-        <h3>Контакти</h3>
+            <section class="form-block">
+                <div class="form-block__header">
+                    <span class="form-step">4</span>
+                    <div>
+                        <h2>Опис</h2>
+                        <p>Згадайте прикмети, нашийник, поведінку або інші важливі деталі.</p>
+                    </div>
+                </div>
 
-        <input type="text" name="title" placeholder="Назва оголошення">
-        <input type="text" name="phone" placeholder="Телефон">
-    </div>
+                <div class="field">
+                    <label for="description">Детальний опис</label>
+                    <textarea id="description" name="description" placeholder="Опишіть зовнішність, особливі прикмети та обставини." required></textarea>
+                </div>
+            </section>
 
-    <button type="submit" class="submit_btn">Опублікувати</button>
+            <section class="form-block">
+                <div class="form-block__header">
+                    <span class="form-step">5</span>
+                    <div>
+                        <h2>Фото та контакти</h2>
+                        <p>Додайте зображення і телефон для швидкого зв'язку.</p>
+                    </div>
+                </div>
 
-</form>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="photo">Фото</label>
+                        <input id="photo" type="file" name="photo" accept="image/*">
+                    </div>
+
+                    <div class="field">
+                        <label for="phone">Телефон</label>
+                        <input id="phone" type="text" name="phone" placeholder="+380..." required>
+                    </div>
+                </div>
+            </section>
+
+            <div class="form-submit">
+                <button type="submit" class="submit_btn">Опублікувати оголошення</button>
+            </div>
+        </form>
+    </main>
+</body>
+</html>

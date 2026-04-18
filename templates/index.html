@@ -1,36 +1,103 @@
-{% include "header.html" %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FindMyPet | Оголошення</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="page page-home">
+    {% include "header.html" %}
 
-<div class="cards">
+    <main class="page-main">
+        <section class="home-hero">
+            <div class="home-hero__content">
+                <span class="section-tag">Спільнота допомоги тваринам</span>
+                <h1>Знайти улюбленця стає простіше, коли люди діють разом.</h1>
+                <p>
+                    Переглядайте актуальні оголошення про зниклих і знайдених тварин,
+                    швидко зв'язуйтеся з авторами та публікуйте власні повідомлення.
+                </p>
+                <div class="hero-actions">
+                    <a class="btn btn-primary" href="{{ url_for('add') }}">Створити оголошення</a>
+                    {% if not user %}
+                    <a class="btn btn-secondary" href="{{ url_for('register') }}">Створити акаунт</a>
+                    {% endif %}
+                </div>
+            </div>
 
-{% for pet in pets %}
-<div class="card">
+            <div class="home-hero__panel">
+                <div class="hero-stat">
+                    <strong>{{ pets|length }}</strong>
+                    <span>оголошень у стрічці</span>
+                </div>
+                <div class="hero-note">
+                    Порада: додавайте чітке фото, місце та дату. Так шанс швидше знайти тварину значно вищий.
+                </div>
+            </div>
+        </section>
 
-    {% if pet.photo %}
-        <img src="{{ url_for('static', filename='uploads/' + pet.photo) }}">
-    {% endif %}
+        <section class="listing-section">
+            <div class="section-heading">
+                <div>
+                    <span class="section-tag">Стрічка</span>
+                    <h2>Актуальні публікації</h2>
+                </div>
+            </div>
 
-    <div class="card-body">
+            {% if pets %}
+            <div class="cards">
+                {% for pet in pets %}
+                <article class="card">
+                    {% if pet.photo %}
+                    <img src="{{ url_for('static', filename='uploads/' + pet.photo) }}" alt="{{ pet.title }}">
+                    {% else %}
+                    <div class="card__image-placeholder">Фото відсутнє</div>
+                    {% endif %}
 
-    <span class="badge ...">{{ pet.status }}</span>
+                    <div class="card-body">
+                        <span class="badge {% if pet.status == 'Зниклий' %}lost{% else %}found{% endif %}">
+                            {{ pet.status }}
+                        </span>
 
-    <h3>{{ pet.title }}</h3>
+                        <h3>{{ pet.title }}</h3>
 
-    <p>{{ pet.animal_type }} | {{ pet.breed }}</p>
-    <p>{{ pet.location }}</p>
+                        <p class="card-meta"><strong>{{ pet.animal_type }}</strong> {% if pet.breed %}<span>•</span> {{ pet.breed }}{% endif %}</p>
+                        <p class="card-info">Локація: {{ pet.location }}</p>
+                        <p class="card-info">Дата: {{ pet.date }}</p>
 
-</div>
+                        <p class="desc">{{ pet.description }}</p>
 
-<div class="card-footer">
-    <span class="author">👤 {{ pet.user.username if pet.user else "анонім" }}</span>
-</div>
+                        <div class="card-actions">
+                            <button type="button" class="reveal-phone-btn" onclick="this.innerText='{{ pet.phone }}'">
+                                Показати номер
+                            </button>
+                        </div>
+                    </div>
 
-</div>
-{% endfor %}
+                    <div class="card-footer">
+                        <span class="author">
+                            Автор: {{ pet.user.username if pet.user else "анонім" }}
+                        </span>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <h3>Поки що немає оголошень</h3>
+                <p>Створіть перше повідомлення, щоб допомогти знайти тварину або повідомити про знахідку.</p>
+                <a class="btn btn-primary" href="{{ url_for('add') }}">Додати оголошення</a>
+            </div>
+            {% endif %}
+        </section>
+    </main>
 
-</div>
-<div id="lightbox" class="lightbox">
-    <span class="close">&times;</span>
-    <img id="lightbox-img" src="">
-</div>
+    <div id="lightbox" class="lightbox">
+        <span class="close">&times;</span>
+        <img id="lightbox-img" src="" alt="Перегляд фото">
+    </div>
 
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

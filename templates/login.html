@@ -1,16 +1,65 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
+    <title>FindMyPet | Вхід</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
-      {% include "header.html" %}
-     <form method="POST">
-    <input type="text" name="username" placeholder="Логін">
-    <input type="password" name="password" placeholder="Пароль">
-    <button type="submit">Увійти</button>
-</form>
+<body class="page page-auth">
+    {% include "header.html" %}
+
+    <main class="page-main auth-page">
+        <section class="auth-shell">
+            <div class="auth-hero">
+                <span class="section-tag">FindMyPet</span>
+                <h1>Повертаємо улюбленців додому швидше.</h1>
+                <p>
+                    Увійдіть у свій кабінет, щоб додавати оголошення, редагувати інформацію
+                    та слідкувати за своїми публікаціями.
+                </p>
+
+                <ul class="auth-list">
+                    <li>Публікуйте нові оголошення за кілька хвилин.</li>
+                    <li>Зберігайте контакти й фото в одному місці.</li>
+                    <li>Швидше реагуйте на повідомлення від людей.</li>
+                </ul>
+            </div>
+
+            <section class="auth-card">
+                <div class="auth-panel">
+                    <h2>Вхід до акаунта</h2>
+                    <p class="auth-subtitle">Введіть логін і пароль, щоб продовжити роботу.</p>
+
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="flash-message">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" class="auth-form">
+                        <div class="field">
+                            <label for="username">Логін</label>
+                            <input id="username" type="text" name="username" placeholder="Введіть логін" required>
+                        </div>
+
+                        <div class="field">
+                            <label for="password">Пароль</label>
+                            <input id="password" type="password" name="password" placeholder="Введіть пароль" required>
+                        </div>
+
+                        <button class="submit_btn" type="submit">Увійти</button>
+                    </form>
+
+                    <p class="auth-switch">
+                        Ще не маєте акаунта?
+                        <a href="{{ url_for('register') }}">Зареєструватися</a>
+                    </p>
+                </div>
+            </section>
+        </section>
+    </main>
 </body>
 </html>

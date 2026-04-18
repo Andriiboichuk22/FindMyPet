@@ -1,24 +1,21 @@
-<head>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<header>
-    <a href="{{ url_for('home') }}">
-        <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo">
-    </a>
+<header class="site-header">
+    <div class="site-header__inner">
+        <a href="{{ url_for('home') }}" class="site-brand" aria-label="FindMyPet - на головну">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo" alt="FindMyPet">
+            <span class="site-brand__text">FindMyPet</span>
+        </a>
 
-    <div>
-        <form action="{{ url_for('add') }}" method="get">
-            <button type="submit">Додати оголошення</button>
-        </form>
+        <nav class="site-nav" aria-label="Основна навігація">
+            <a class="site-nav__link" href="{{ url_for('home') }}">Оголошення</a>
+            <a class="site-nav__link site-nav__link--accent" href="{{ url_for('add') }}">Додати оголошення</a>
 
-        {% if user %}
-        <div class="fl-col">
-            <a href="/cabinet">{{ user }}</a>
-            <a href="/logout">Вийти</a></div>
-        {% else %}
-        <div class="fl-col">
-            <a href="{{ url_for('login') }}">Вхід</a>
-            <a href="{{ url_for('register') }}">Реєстрація</a></div>
-        {% endif %}
+            {% if user %}
+            <span class="site-nav__user">{{ user }}</span>
+            <a class="site-nav__link" href="/logout">Вийти</a>
+            {% else %}
+            <a class="site-nav__link" href="{{ url_for('login') }}">Вхід</a>
+            <a class="site-nav__link" href="{{ url_for('register') }}">Реєстрація</a>
+            {% endif %}
+        </nav>
     </div>
 </header>
