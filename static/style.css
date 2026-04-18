@@ -106,6 +106,58 @@ img {
     color: var(--primary-dark);
 }
 
+.btn-danger {
+    background: linear-gradient(135deg, var(--danger), #e56c61);
+    color: #fff;
+    box-shadow: 0 14px 28px rgba(198, 80, 68, 0.18);
+}
+
+.social-auth-btn {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 54px;
+    padding: 14px 18px;
+    border-radius: 18px;
+    background: #ffffff;
+    border: 1px solid rgba(35, 49, 59, 0.12);
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 800;
+    box-shadow: 0 12px 28px rgba(35, 49, 59, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.social-auth-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 34px rgba(35, 49, 59, 0.12);
+}
+
+.auth-divider {
+    position: relative;
+    margin: 18px 0;
+    text-align: center;
+}
+
+.auth-divider::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    background: rgba(35, 49, 59, 0.12);
+}
+
+.auth-divider span {
+    position: relative;
+    display: inline-block;
+    padding: 0 12px;
+    background: rgba(255, 255, 255, 0.78);
+    color: var(--text-soft);
+}
+
 .field label {
     display: block;
     margin-bottom: 8px;
@@ -147,6 +199,11 @@ img {
     color: var(--danger);
     font-size: 14px;
     font-weight: 600;
+}
+
+.flash-message--info {
+    background: #e8f4ff;
+    color: #185f94;
 }
 
 .empty-state {
@@ -777,6 +834,11 @@ img {
 .user-ad-card__actions {
     display: flex;
     align-items: center;
+    gap: 12px;
+}
+
+.user-ad-card__actions form {
+    margin: 0;
 }
 
 /* login.html + register.html */

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FindMyPet | Завершити профіль</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="page page-auth page-complete-profile">
+    {% include "header.html" %}
+
+    <main class="page-main auth-page">
+        <section class="auth-shell auth-shell--reverse">
+            <div class="auth-hero auth-hero--warm">
+                <span class="section-tag">Перший вхід через Google</span>
+                <h1>Оберіть публічний логін, який бачитимуть інші користувачі.</h1>
+                <p>
+                    Ваша Google-пошта залишиться приватною. На сайті буде відображатися тільки
+                    той логін, який ви зараз оберете.
+                </p>
+
+                <ul class="auth-list">
+                    <li>Email використовується лише для входу через Google.</li>
+                    <li>У публічному профілі та оголошеннях показується тільки логін.</li>
+                    <li>Телефон можна додати одразу, щоб він підставлявся в нові оголошення.</li>
+                </ul>
+            </div>
+
+            <section class="auth-card">
+                <div class="auth-panel">
+                    <h2>Завершення профілю</h2>
+                    <p class="auth-subtitle">Збережіть публічний логін і, за бажанням, номер телефону.</p>
+
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="flash-message">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" class="auth-form">
+                        <div class="field">
+                            <label for="username">Публічний логін</label>
+                            <input id="username" type="text" name="username" value="{{ profile_user.username }}" required>
+                        </div>
+
+                        <div class="field">
+                            <label for="phone">Телефон</label>
+                            <input id="phone" type="text" name="phone" value="{{ profile_user.phone or '' }}" placeholder="+380...">
+                        </div>
+
+                        <button class="submit_btn" type="submit">Зберегти профіль</button>
+                    </form>
+                </div>
+            </section>
+        </section>
+    </main>
+</body>
+</html>

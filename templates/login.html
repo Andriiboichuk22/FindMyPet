@@ -29,7 +29,7 @@
             <section class="auth-card">
                 <div class="auth-panel">
                     <h2>Вхід до акаунта</h2>
-                    <p class="auth-subtitle">Введіть логін і пароль, щоб продовжити роботу.</p>
+                    <p class="auth-subtitle">Введіть логін і пароль або скористайтесь Google-входом.</p>
 
                     {% with messages = get_flashed_messages() %}
                         {% if messages %}
@@ -38,6 +38,15 @@
                             {% endfor %}
                         {% endif %}
                     {% endwith %}
+
+                    {% if google_auth_enabled %}
+                    <a class="social-auth-btn" href="{{ url_for('login_google') }}">Увійти через Google</a>
+                    <div class="auth-divider"><span>або</span></div>
+                    {% else %}
+                    <div class="flash-message flash-message--info">
+                        Google-вхід з'явиться після додавання `GOOGLE_CLIENT_ID` і `GOOGLE_CLIENT_SECRET`.
+                    </div>
+                    {% endif %}
 
                     <form method="POST" class="auth-form">
                         <div class="field">
