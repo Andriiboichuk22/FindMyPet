@@ -394,6 +394,58 @@ img {
     font-size: 32px;
 }
 
+.search-panel {
+    margin-bottom: 28px;
+    padding: 28px;
+    border-radius: var(--radius-xl);
+    background: var(--surface);
+    box-shadow: var(--shadow-md);
+}
+
+.search-panel__header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.search-panel__header h2 {
+    font-size: 30px;
+}
+
+.search-panel__header p {
+    max-width: 430px;
+    color: var(--text-soft);
+    line-height: 1.7;
+}
+
+.search-form {
+    display: grid;
+    gap: 18px;
+}
+
+.search-form__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.search-form__actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.results-counter {
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: rgba(11, 107, 115, 0.08);
+    color: var(--primary-dark);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
 .cards {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -960,7 +1012,8 @@ img {
     .auth-shell,
     .auth-shell--reverse,
     .cards,
-    .form-grid {
+    .form-grid,
+    .search-form__grid {
         grid-template-columns: 1fr;
     }
 
@@ -1005,7 +1058,8 @@ img {
     .auth-card,
     .profile-card,
     .profile-ads,
-    .cabinet-summary {
+    .cabinet-summary,
+    .search-panel {
         padding: 22px;
     }
 
@@ -1017,10 +1071,17 @@ img {
     }
 
     .section-heading h2,
+    .search-panel__header h2,
     .profile-card__header h2,
     .profile-ads__header h2,
     .auth-panel h2 {
         font-size: 28px;
+    }
+
+    .search-panel__header,
+    .section-heading {
+        align-items: flex-start;
+        flex-direction: column;
     }
 }
 
@@ -1028,14 +1089,16 @@ img {
     .hero-actions,
     .type_adverts,
     .form-submit,
-    .profile-ads__header {
+    .profile-ads__header,
+    .search-form__actions {
         flex-direction: column;
     }
 
     .btn,
     .submit_btn,
     .reveal-phone-btn,
-    .type_btn span {
+    .type_btn span,
+    .search-form__actions .btn {
         width: 100%;
     }
 

@@ -37,12 +37,60 @@
             </div>
         </section>
 
+        <section class="search-panel">
+            <div class="search-panel__header">
+                <div>
+                    <span class="section-tag">Пошук</span>
+                    <h2>Знайдіть потрібне оголошення швидше</h2>
+                </div>
+                <p>Фільтруйте стрічку за ключовим словом, статусом, типом тварини та локацією.</p>
+            </div>
+
+            <form method="GET" class="search-form">
+                <div class="search-form__grid">
+                    <div class="field">
+                        <label for="q">Ключове слово</label>
+                        <input id="q" type="text" name="q" value="{{ filters.q }}" placeholder="Назва, опис, порода або район">
+                    </div>
+
+                    <div class="field">
+                        <label for="status">Статус</label>
+                        <select id="status" name="status">
+                            <option value="">Усі</option>
+                            <option value="Зниклий" {% if filters.status == 'Зниклий' %}selected{% endif %}>Зниклий</option>
+                            <option value="Знайдений" {% if filters.status == 'Знайдений' %}selected{% endif %}>Знайдений</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="animal_type">Тип тварини</label>
+                        <select id="animal_type" name="animal_type">
+                            <option value="">Усі</option>
+                            <option value="Пес" {% if filters.animal_type == 'Пес' %}selected{% endif %}>Пес</option>
+                            <option value="Кіт" {% if filters.animal_type == 'Кіт' %}selected{% endif %}>Кіт</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="location">Локація</label>
+                        <input id="location" type="text" name="location" value="{{ filters.location }}" placeholder="Місто або район">
+                    </div>
+                </div>
+
+                <div class="search-form__actions">
+                    <button class="submit_btn" type="submit">Застосувати</button>
+                    <a class="btn btn-secondary" href="{{ url_for('home') }}">Скинути</a>
+                </div>
+            </form>
+        </section>
+
         <section class="listing-section">
             <div class="section-heading">
                 <div>
                     <span class="section-tag">Стрічка</span>
                     <h2>Актуальні публікації</h2>
                 </div>
+                <div class="results-counter">{{ pets|length }} результатів</div>
             </div>
 
             {% if pets %}
@@ -85,9 +133,9 @@
             </div>
             {% else %}
             <div class="empty-state">
-                <h3>Поки що немає оголошень</h3>
-                <p>Створіть перше повідомлення, щоб допомогти знайти тварину або повідомити про знахідку.</p>
-                <a class="btn btn-primary" href="{{ url_for('add') }}">Додати оголошення</a>
+                <h3>Нічого не знайдено</h3>
+                <p>Спробуйте змінити фільтри або скинути пошук, щоб побачити більше оголошень.</p>
+                <a class="btn btn-primary" href="{{ url_for('home') }}">Скинути фільтри</a>
             </div>
             {% endif %}
         </section>

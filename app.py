@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import text
+from sqlalchemy import or_, text
 from sqlalchemy.exc import IntegrityError
 from werkzeug.utils import secure_filename
 
@@ -194,8 +194,41 @@ def init_app_data():
 # =========================
 @app.route('/')
 def home():
-    pets = Pet.query.order_by(Pet.id.desc()).all()
-    return render_template('index.html', pets=pets)
+    search_query = request.args.get('q', '').strip()
+    status_filter = request.args.get('status', '').strip()
+    animal_type_filter = request.args.get('animal_type', '').strip()
+    location_filter = request.args.get('location', '').strip()
+
+    pets_query = Pet.query
+
+    if search_query:
+        search_pattern = f'%{search_query}%'
+        pets_query = pets_query.filter(
+            or_(
+                Pet.title.ilike(search_pattern),
+                Pet.description.ilike(search_pattern),
+                Pet.breed.ilike(search_pattern),
+                Pet.location.ilike(search_pattern),
+            )
+        )
+
+    if status_filter:
+        pets_query = pets_query.filter(Pet.status == status_filter)
+
+    if animal_type_filter:
+        pets_query = pets_query.filter(Pet.animal_type == animal_type_filter)
+
+    if location_filter:
+        pets_query = pets_query.filter(Pet.location.ilike(f'%{location_filter}%'))
+
+    pets = pets_query.order_by(Pet.id.desc()).all()
+    filters = {
+        'q': search_query,
+        'status': status_filter,
+        'animal_type': animal_type_filter,
+        'location': location_filter,
+    }
+    return render_template('index.html', pets=pets, filters=filters)
 
 
 # =========================
