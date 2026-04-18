@@ -10,7 +10,7 @@
             <a class="site-nav__link site-nav__link--accent" href="{{ url_for('add') }}">Додати оголошення</a>
 
             {% if user %}
-            <span class="site-nav__user">{{ user }}</span>
+            <a class="site-nav__user" href="/cabinet">{{ user }}</a>
             <a class="site-nav__link" href="/logout">Вийти</a>
             {% else %}
             <a class="site-nav__link" href="{{ url_for('login') }}">Вхід</a>

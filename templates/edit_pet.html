@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FindMyPet | Редагувати оголошення</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="page page-edit-pet">
+    {% include "header.html" %}
+
+    <main class="page-main">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash-message">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <section class="form-hero">
+            <span class="section-tag">Редагування</span>
+            <h1>Оновіть оголошення, якщо з’явилися нові деталі.</h1>
+            <p>
+                Виправте контакти, місце, дату або додайте нове фото, щоб інформація залишалась актуальною.
+            </p>
+        </section>
+
+        <form method="POST" enctype="multipart/form-data" class="pet-form">
+            <section class="form-block">
+                <div class="form-block__header">
+                    <span class="form-step">1</span>
+                    <div>
+                        <h2>Тип оголошення</h2>
+                        <p>Оберіть актуальний статус оголошення.</p>
+                    </div>
+                </div>
+
+                <div class="type_adverts">
+                    <label class="type_btn red">
+                        <input type="radio" name="status" value="Зниклий" {% if pet.status == 'Зниклий' %}checked{% endif %}>
+                        <span>Зник</span>
+                    </label>
+
+                    <label class="type_btn green">
+                        <input type="radio" name="status" value="Знайдений" {% if pet.status == 'Знайдений' %}checked{% endif %}>
+                        <span>Знайдено</span>
+                    </label>
+                </div>
+            </section>
+
+            <section class="form-block">
+                <div class="form-block__header">
+                    <span class="form-step">2</span>
+                    <div>
+                        <h2>Основні дані</h2>
+                        <p>Підкоригуйте опис і характеристики тварини.</p>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="title">Назва оголошення</label>
+                        <input id="title" type="text" name="title" value="{{ pet.title }}" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="animal_type">Тип тварини</label>
+                        <select id="animal_type" name="animal_type">
+                            <option value="Пес" {% if pet.animal_type == 'Пес' %}selected{% endif %}>Пес</option>
+                            <option value="Кіт" {% if pet.animal_type == 'Кіт' %}selected{% endif %}>Кіт</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="breed">Порода</label>
+                        <input id="breed" type="text" name="breed" value="{{ pet.breed or '' }}">
+                    </div>
+
+                    <div class="field">
+                        <label for="age">Вік</label>
+                        <input id="age" type="text" name="age" value="{{ pet.age or '' }}">
+                    </div>
+
+                    <div class="field">
+                        <label for="location">Локація</label>
+                        <input id="location" type="text" name="location" value="{{ pet.location or '' }}" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="date">Дата</label>
+                        <input id="date" type="text" name="date" value="{{ pet.date or '' }}" required>
+                    </div>
+                </div>
+            </section>
+
+            <section class="form-block">
+                <div class="form-block__header">
+                    <span class="form-step">3</span>
+                    <div>
+                        <h2>Опис і контакти</h2>
+                        <p>Оновіть текст, фото та номер телефону для зв’язку.</p>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="description">Опис</label>
+                    <textarea id="description" name="description" required>{{ pet.description }}</textarea>
+                </div>
+
+                <div class="form-grid form-grid--align-start">
+                    <div class="field">
+                        <label for="photo">Нове фото</label>
+                        <input id="photo" type="file" name="photo" accept="image/*">
+                    </div>
+
+                    <div class="field">
+                        <label for="phone">Телефон</label>
+                        <input id="phone" type="text" name="phone" value="{{ pet.phone or profile_user.phone or '' }}" required>
+                    </div>
+                </div>
+            </section>
+
+            <div class="form-submit form-submit--between">
+                <a class="btn btn-secondary" href="{{ url_for('cabinet') }}">Назад у кабінет</a>
+                <button type="submit" class="submit_btn">Зберегти зміни</button>
+            </div>
+        </form>
+    </main>
+</body>
+</html>

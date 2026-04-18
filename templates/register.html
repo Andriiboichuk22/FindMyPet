@@ -31,6 +31,14 @@
                     <h2>Створення акаунта</h2>
                     <p class="auth-subtitle">Заповніть базові дані, щоб отримати доступ до всіх можливостей сервісу.</p>
 
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="flash-message">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
                     <form method="POST" class="auth-form">
                         <div class="field">
                             <label for="username">Логін</label>

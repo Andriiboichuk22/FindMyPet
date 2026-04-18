@@ -10,6 +10,14 @@
     {% include "header.html" %}
 
     <main class="page-main">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash-message">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
         <section class="form-hero">
             <span class="section-tag">Нове оголошення</span>
             <h1>Розкажіть про тварину так, щоб її було легше впізнати.</h1>
@@ -131,7 +139,7 @@
 
                     <div class="field">
                         <label for="phone">Телефон</label>
-                        <input id="phone" type="text" name="phone" placeholder="+380..." required>
+                        <input id="phone" type="text" name="phone" placeholder="+380..." value="{{ profile_user.phone or '' }}" required>
                     </div>
                 </div>
             </section>

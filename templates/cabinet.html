@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FindMyPet | Кабінет</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="page page-cabinet">
+    {% include "header.html" %}
+
+    <main class="page-main">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash-message">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <section class="cabinet-hero">
+            <div class="cabinet-hero__content">
+                <span class="section-tag">Особистий кабінет</span>
+                <h1>Керуйте профілем і власними оголошеннями в одному місці.</h1>
+                <p>
+                    Тут можна оновити фото, номер телефону та швидко перейти до редагування
+                    ваших публікацій без зайвого пошуку по сайту.
+                </p>
+            </div>
+
+            <div class="cabinet-summary">
+                <strong>{{ user_pets|length }}</strong>
+                <span>ваших оголошень зараз опубліковано</span>
+            </div>
+        </section>
+
+        <section class="cabinet-layout">
+            <section class="profile-card">
+                <div class="profile-card__header">
+                    <div class="profile-avatar-wrap">
+                        {% if profile_user.photo %}
+                        <img class="profile-avatar" src="{{ url_for('static', filename='uploads/' + profile_user.photo) }}" alt="{{ profile_user.username }}">
+                        {% else %}
+                        <div class="profile-avatar profile-avatar--placeholder">{{ profile_user.username[:1]|upper }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <h2>{{ profile_user.username }}</h2>
+                        <p class="profile-card__meta">Заповніть контакти один раз, і вони підставлятимуться в нові оголошення автоматично.</p>
+                    </div>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data" class="profile-form">
+                    <div class="field">
+                        <label for="username">Логін</label>
+                        <input id="username" type="text" name="username" value="{{ profile_user.username }}" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="phone">Телефон</label>
+                        <input id="phone" type="text" name="phone" value="{{ profile_user.phone or '' }}" placeholder="+380...">
+                    </div>
+
+                    <div class="field">
+                        <label for="photo">Фото профілю</label>
+                        <input id="photo" type="file" name="photo" accept="image/*">
+                    </div>
+
+                    <button class="submit_btn" type="submit">Зберегти профіль</button>
+                </form>
+            </section>
+
+            <section class="profile-ads">
+                <div class="profile-ads__header">
+                    <div>
+                        <span class="section-tag">Мої оголошення</span>
+                        <h2>Ваші публікації</h2>
+                    </div>
+                    <a class="btn btn-primary" href="{{ url_for('add') }}">Додати нове</a>
+                </div>
+
+                {% if user_pets %}
+                <div class="profile-ads__list">
+                    {% for pet in user_pets %}
+                    <article class="user-ad-card">
+                        <div class="user-ad-card__image">
+                            {% if pet.photo %}
+                            <img src="{{ url_for('static', filename='uploads/' + pet.photo) }}" alt="{{ pet.title }}">
+                            {% else %}
+                            <div class="card__image-placeholder">Без фото</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="user-ad-card__body">
+                            <span class="badge {% if pet.status == 'Зниклий' %}lost{% else %}found{% endif %}">{{ pet.status }}</span>
+                            <h3>{{ pet.title }}</h3>
+                            <p>{{ pet.animal_type }} {% if pet.breed %}• {{ pet.breed }}{% endif %}</p>
+                            <p>Локація: {{ pet.location }}</p>
+                            <p>Телефон: {{ pet.phone }}</p>
+                        </div>
+
+                        <div class="user-ad-card__actions">
+                            <a class="btn btn-secondary" href="{{ url_for('edit_pet', pet_id=pet.id) }}">Редагувати</a>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <h3>У вас ще немає оголошень</h3>
+                    <p>Створіть перше оголошення, і воно з’явиться тут для швидкого редагування.</p>
+                    <a class="btn btn-primary" href="{{ url_for('add') }}">Створити оголошення</a>
+                </div>
+                {% endif %}
+            </section>
+        </section>
+    </main>
+</body>
+</html>
