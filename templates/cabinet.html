@@ -23,8 +23,8 @@
                 <span class="section-tag">Особистий кабінет</span>
                 <h1>Керуйте профілем і власними оголошеннями в одному місці.</h1>
                 <p>
-                    Тут можна оновити фото, номер телефону та швидко перейти до редагування
-                    ваших публікацій без зайвого пошуку по сайту.
+                    Тут можна оновити фото, email, номер телефону та швидко перейти
+                    до редагування ваших публікацій без зайвого пошуку по сайту.
                 </p>
             </div>
 
@@ -47,7 +47,10 @@
 
                     <div>
                         <h2>{{ profile_user.username }}</h2>
-                        <p class="profile-card__meta">Заповніть контакти один раз, і вони підставлятимуться в нові оголошення автоматично.</p>
+                        <p class="profile-card__meta">
+                            Заповніть контакти один раз, і вони підставлятимуться
+                            в нові оголошення автоматично.
+                        </p>
                     </div>
                 </div>
 
@@ -55,6 +58,11 @@
                     <div class="field">
                         <label for="username">Логін</label>
                         <input id="username" type="text" name="username" value="{{ profile_user.username }}" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="email">Email</label>
+                        <input id="email" type="email" name="email" value="{{ profile_user.email or '' }}" placeholder="name@example.com" required>
                     </div>
 
                     <div class="field">
@@ -112,7 +120,7 @@
                 {% else %}
                 <div class="empty-state">
                     <h3>У вас ще немає оголошень</h3>
-                    <p>Створіть перше оголошення, і воно з’явиться тут для швидкого редагування.</p>
+                    <p>Створіть перше оголошення, і воно з'явиться тут для швидкого редагування.</p>
                     <a class="btn btn-primary" href="{{ url_for('add') }}">Створити оголошення</a>
                 </div>
                 {% endif %}

@@ -13,7 +13,7 @@
         <section class="auth-shell auth-shell--reverse">
             <div class="auth-hero auth-hero--warm">
                 <span class="section-tag">Новий акаунт</span>
-                <h1>Створіть профіль і долучайтесь до допомоги тваринам.</h1>
+                <h1>Створіть профіль і долучайтеся до допомоги тваринам.</h1>
                 <p>
                     Після реєстрації ви зможете публікувати оголошення, зберігати свої контакти
                     та швидко повертатися до всіх своїх записів.
@@ -29,7 +29,7 @@
             <section class="auth-card">
                 <div class="auth-panel">
                     <h2>Створення акаунта</h2>
-                    <p class="auth-subtitle">Зареєструйтесь звичайним способом або продовжіть через Google.</p>
+                    <p class="auth-subtitle">Зареєструйтеся звичайним способом або продовжіть через Google.</p>
 
                     {% with messages = get_flashed_messages() %}
                         {% if messages %}
@@ -44,7 +44,7 @@
                     <div class="auth-divider"><span>або</span></div>
                     {% else %}
                     <div class="flash-message flash-message--info">
-                        Google-вхід з'явиться тут після додавання `GOOGLE_CLIENT_ID` і `GOOGLE_CLIENT_SECRET`.
+                        Вхід через Google з'явиться тут після додавання `GOOGLE_CLIENT_ID` і `GOOGLE_CLIENT_SECRET`.
                     </div>
                     {% endif %}
 
@@ -55,8 +55,13 @@
                         </div>
 
                         <div class="field">
+                            <label for="email">Email</label>
+                            <input id="email" type="email" name="email" placeholder="name@example.com" required>
+                        </div>
+
+                        <div class="field">
                             <label for="password">Пароль</label>
-                            <input id="password" type="password" name="password" placeholder="Створіть пароль" required>
+                            <input id="password" type="password" name="password" placeholder="Створіть пароль" minlength="8" required>
                         </div>
 
                         <button class="submit_btn" type="submit">Зареєструватися</button>

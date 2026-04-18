@@ -1085,6 +1085,17 @@ img {
     line-height: 1.7;
 }
 
+.auth-helper {
+    margin-top: 14px;
+    text-align: center;
+}
+
+.auth-helper a {
+    color: var(--primary);
+    font-weight: 700;
+    text-decoration: none;
+}
+
 .auth-switch a {
     color: var(--primary);
     font-weight: 800;

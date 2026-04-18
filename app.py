@@ -1,13 +1,16 @@
-from functools import wraps
+﻿from functools import wraps
 from datetime import datetime
+from email.message import EmailMessage
 import os
 import secrets
+import smtplib
 from uuid import uuid4
 
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_, text
 from sqlalchemy.exc import IntegrityError
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
@@ -31,6 +34,16 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID') or config.GOOGLE_CLIENT_ID
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET') or config.GOOGLE_CLIENT_SECRET
+MAIL_SERVER = os.getenv('MAIL_SERVER') or getattr(config, 'MAIL_SERVER', '')
+MAIL_PORT = int(os.getenv('MAIL_PORT') or getattr(config, 'MAIL_PORT', 587))
+MAIL_USE_TLS = (os.getenv('MAIL_USE_TLS') or str(getattr(config, 'MAIL_USE_TLS', 'true'))).lower() in {'1', 'true', 'yes', 'on'}
+MAIL_USERNAME = os.getenv('MAIL_USERNAME') or getattr(config, 'MAIL_USERNAME', '')
+MAIL_PASSWORD = os.getenv('MAIL_PASSWORD') or getattr(config, 'MAIL_PASSWORD', '')
+MAIL_FROM = os.getenv('MAIL_FROM') or getattr(config, 'MAIL_FROM', MAIL_USERNAME)
+PASSWORD_RESET_SALT = os.getenv('PASSWORD_RESET_SALT') or getattr(config, 'PASSWORD_RESET_SALT', 'password-reset-salt')
+PASSWORD_RESET_EXPIRES_MINUTES = int(
+    os.getenv('PASSWORD_RESET_EXPIRES_MINUTES') or getattr(config, 'PASSWORD_RESET_EXPIRES_MINUTES', 30)
+)
 
 db = SQLAlchemy(app)
 oauth = None
@@ -88,6 +101,10 @@ def set_logged_in_user(user):
     session['username'] = user.username
 
 
+def get_token_serializer():
+    return URLSafeTimedSerializer(app.secret_key)
+
+
 def hash_password(password):
     return generate_password_hash(password)
 
@@ -106,6 +123,48 @@ def verify_password(user, password):
         return check_password_hash(stored_password, password)
 
     return False
+
+
+def normalize_email(value):
+    return value.strip().lower()
+
+
+def is_mail_configured():
+    return all([MAIL_SERVER, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM])
+
+
+def send_email_message(subject, recipient, body):
+    if not is_mail_configured():
+        return False
+
+    message = EmailMessage()
+    message['Subject'] = subject
+    message['From'] = MAIL_FROM
+    message['To'] = recipient
+    message.set_content(body)
+
+    with smtplib.SMTP(MAIL_SERVER, MAIL_PORT) as smtp:
+        if MAIL_USE_TLS:
+            smtp.starttls()
+        smtp.login(MAIL_USERNAME, MAIL_PASSWORD)
+        smtp.send_message(message)
+
+    return True
+
+
+def generate_password_reset_token(user):
+    serializer = get_token_serializer()
+    return serializer.dumps(user.email, salt=PASSWORD_RESET_SALT)
+
+
+def verify_password_reset_token(token):
+    serializer = get_token_serializer()
+    email = serializer.loads(
+        token,
+        salt=PASSWORD_RESET_SALT,
+        max_age=PASSWORD_RESET_EXPIRES_MINUTES * 60,
+    )
+    return User.query.filter_by(email=email).first()
 
 
 def login_required(view_func):
@@ -142,6 +201,7 @@ def inject_user():
         'user': current_user.username if current_user else None,
         'current_user': current_user,
         'google_auth_enabled': google_oauth is not None,
+        'mail_configured': is_mail_configured(),
     }
 
 
@@ -271,7 +331,7 @@ def add_comment(pet_id):
     content = request.form['content'].strip()
 
     if not content:
-        flash('Відгук не може бути порожнім')
+        flash('Р’С–РґРіСѓРє РЅРµ РјРѕР¶Рµ Р±СѓС‚Рё РїРѕСЂРѕР¶РЅС–Рј')
         return redirect(url_for('home', **request.args))
 
     comment = Comment(
@@ -281,7 +341,7 @@ def add_comment(pet_id):
     )
     db.session.add(comment)
     db.session.commit()
-    flash('Відгук додано')
+    flash('Р’С–РґРіСѓРє РґРѕРґР°РЅРѕ')
     return redirect(url_for('home', **request.args))
 
 
@@ -314,7 +374,7 @@ def add():
 
         db.session.add(pet)
         db.session.commit()
-        flash('Оголошення опубліковано')
+        flash('РћРіРѕР»РѕС€РµРЅРЅСЏ РѕРїСѓР±Р»С–РєРѕРІР°РЅРѕ')
         return redirect(url_for('home'))
 
     return render_template('add.html', profile_user=current_user)
@@ -328,8 +388,6 @@ def login():
     if request.method == 'POST':
         username = request.form['username'].strip()
         password = request.form['password']
-
-
         user = User.query.filter_by(username=username).first()
 
         if verify_password(user, password):
@@ -344,6 +402,77 @@ def login():
         flash('Невірний логін або пароль')
 
     return render_template('login.html')
+
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = normalize_email(request.form['email'])
+
+        if not email:
+            flash('Вкажіть email для відновлення пароля')
+            return render_template('forgot_password.html')
+
+        if not is_mail_configured():
+            flash('Відновлення пароля через пошту ще не налаштоване. Додайте SMTP-параметри в config.py або змінні середовища.')
+            return render_template('forgot_password.html')
+
+        user = User.query.filter_by(email=email).first()
+        if user and user.auth_provider == 'local':
+            token = generate_password_reset_token(user)
+            reset_link = url_for('reset_password', token=token, _external=True)
+            email_body = (
+                'Ви запросили скидання пароля для FindMyPet.\n\n'
+                f'Перейдіть за посиланням, щоб встановити новий пароль:\n{reset_link}\n\n'
+                f'Посилання дійсне {PASSWORD_RESET_EXPIRES_MINUTES} хвилин.\n'
+                'Якщо це були не ви, просто проігноруйте цей лист.'
+            )
+
+            try:
+                send_email_message('FindMyPet - відновлення пароля', user.email, email_body)
+            except Exception:
+                flash('Не вдалося надіслати листа. Перевірте SMTP-налаштування пошти.')
+                return render_template('forgot_password.html')
+
+        flash('Якщо акаунт з таким email існує, ми надіслали інструкцію для відновлення пароля.')
+        return redirect(url_for('login'))
+
+    return render_template('forgot_password.html')
+
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    try:
+        user = verify_password_reset_token(token)
+    except SignatureExpired:
+        flash('Посилання для відновлення пароля вже неактивне. Запросіть нове.')
+        return redirect(url_for('forgot_password'))
+    except BadSignature:
+        flash('Некоректне посилання для відновлення пароля.')
+        return redirect(url_for('forgot_password'))
+
+    if not user or user.auth_provider != 'local':
+        flash('Для цього акаунта відновлення пароля недоступне.')
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+
+        if len(password) < 8:
+            flash('Пароль має містити щонайменше 8 символів')
+            return render_template('reset_password.html', token=token)
+
+        if password != confirm_password:
+            flash('Паролі не збігаються')
+            return render_template('reset_password.html', token=token)
+
+        user.password = hash_password(password)
+        db.session.commit()
+        flash('Пароль оновлено. Тепер увійдіть з новим паролем.')
+        return redirect(url_for('login'))
+
+    return render_template('reset_password.html', token=token)
 
 
 @app.route('/login/google')
@@ -418,10 +547,15 @@ def google_callback():
 def register():
     if request.method == 'POST':
         username = request.form['username'].strip()
+        email = normalize_email(request.form['email'])
         password = request.form['password']
 
         if len(password) < 8:
             flash('Пароль має містити щонайменше 8 символів')
+            return render_template('register.html')
+
+        if not email:
+            flash('Вкажіть email')
             return render_template('register.html')
 
         existing_user = User.query.filter_by(username=username).first()
@@ -429,9 +563,15 @@ def register():
             flash('Користувач з таким логіном уже існує')
             return render_template('register.html')
 
+        existing_email_user = User.query.filter_by(email=email).first()
+        if existing_email_user:
+            flash('Користувач з таким email уже існує')
+            return render_template('register.html')
+
         user = User(
             username=username,
             password=hash_password(password),
+            email=email,
             auth_provider='local',
             is_username_auto=False,
         )
@@ -441,14 +581,13 @@ def register():
             db.session.commit()
         except IntegrityError:
             db.session.rollback()
-            flash('Користувач з таким логіном уже існує')
+            flash('Логін або email уже зайнятий')
             return render_template('register.html')
 
         flash('Акаунт створено. Тепер увійдіть у систему')
         return redirect(url_for('login'))
 
     return render_template('register.html')
-
 
 @app.route('/complete-profile', methods=['GET', 'POST'])
 @login_required
@@ -493,14 +632,25 @@ def cabinet():
 
     if request.method == 'POST':
         new_username = request.form['username'].strip()
+        new_email = normalize_email(request.form['email'])
         current_user.phone = request.form['phone'].strip()
+
+        if not new_email:
+            flash('Вкажіть email')
+            return redirect(url_for('cabinet'))
 
         existing_user = User.query.filter_by(username=new_username).first()
         if existing_user and existing_user.id != current_user.id:
             flash('Такий логін уже зайнятий')
             return redirect(url_for('cabinet'))
 
+        existing_email_user = User.query.filter_by(email=new_email).first()
+        if existing_email_user and existing_email_user.id != current_user.id:
+            flash('Користувач з таким email уже існує')
+            return redirect(url_for('cabinet'))
+
         current_user.username = new_username
+        current_user.email = new_email
         current_user.is_username_auto = False
 
         file = request.files.get('photo')
@@ -513,13 +663,12 @@ def cabinet():
             flash('Профіль оновлено')
         except IntegrityError:
             db.session.rollback()
-            flash('Такий логін уже зайнятий')
+            flash('Логін або email уже зайнятий')
 
         return redirect(url_for('cabinet'))
 
     user_pets = Pet.query.filter_by(user_id=current_user.id).order_by(Pet.id.desc()).all()
     return render_template('cabinet.html', profile_user=current_user, user_pets=user_pets)
-
 
 @app.route('/pets/<int:pet_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -528,7 +677,7 @@ def edit_pet(pet_id):
     pet = Pet.query.get_or_404(pet_id)
 
     if pet.user_id != current_user.id:
-        flash('Ви не можете редагувати це оголошення')
+        flash('Р’Рё РЅРµ РјРѕР¶РµС‚Рµ СЂРµРґР°РіСѓРІР°С‚Рё С†Рµ РѕРіРѕР»РѕС€РµРЅРЅСЏ')
         return redirect(url_for('cabinet'))
 
     if request.method == 'POST':
@@ -547,7 +696,7 @@ def edit_pet(pet_id):
             pet.photo = save_uploaded_file(file, 'pet')
 
         db.session.commit()
-        flash('Оголошення оновлено')
+        flash('РћРіРѕР»РѕС€РµРЅРЅСЏ РѕРЅРѕРІР»РµРЅРѕ')
         return redirect(url_for('cabinet'))
 
     return render_template('edit_pet.html', pet=pet, profile_user=current_user)
@@ -560,12 +709,12 @@ def delete_pet(pet_id):
     pet = Pet.query.get_or_404(pet_id)
 
     if pet.user_id != current_user.id:
-        flash('Ви не можете видалити це оголошення')
+        flash('Р’Рё РЅРµ РјРѕР¶РµС‚Рµ РІРёРґР°Р»РёС‚Рё С†Рµ РѕРіРѕР»РѕС€РµРЅРЅСЏ')
         return redirect(url_for('cabinet'))
 
     db.session.delete(pet)
     db.session.commit()
-    flash('Оголошення видалено')
+    flash('РћРіРѕР»РѕС€РµРЅРЅСЏ РІРёРґР°Р»РµРЅРѕ')
     return redirect(url_for('cabinet'))
 
 
@@ -583,4 +732,13 @@ init_app_data()
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+
+
+
+
+
+
+
 

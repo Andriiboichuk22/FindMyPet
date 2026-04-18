@@ -16,7 +16,7 @@
                 <h1>Повертаємо улюбленців додому швидше.</h1>
                 <p>
                     Увійдіть у свій кабінет, щоб додавати оголошення, редагувати інформацію
-                    та слідкувати за своїми публікаціями.
+                    та стежити за своїми публікаціями.
                 </p>
 
                 <ul class="auth-list">
@@ -29,7 +29,7 @@
             <section class="auth-card">
                 <div class="auth-panel">
                     <h2>Вхід до акаунта</h2>
-                    <p class="auth-subtitle">Введіть логін і пароль або скористайтесь Google-входом.</p>
+                    <p class="auth-subtitle">Введіть логін і пароль або скористайтеся входом через Google.</p>
 
                     {% with messages = get_flashed_messages() %}
                         {% if messages %}
@@ -44,7 +44,7 @@
                     <div class="auth-divider"><span>або</span></div>
                     {% else %}
                     <div class="flash-message flash-message--info">
-                        Google-вхід з'явиться після додавання `GOOGLE_CLIENT_ID` і `GOOGLE_CLIENT_SECRET`.
+                        Вхід через Google з'явиться після додавання `GOOGLE_CLIENT_ID` і `GOOGLE_CLIENT_SECRET`.
                     </div>
                     {% endif %}
 
@@ -61,6 +61,10 @@
 
                         <button class="submit_btn" type="submit">Увійти</button>
                     </form>
+
+                    <p class="auth-helper">
+                        <a href="{{ url_for('forgot_password') }}">Забули пароль?</a>
+                    </p>
 
                     <p class="auth-switch">
                         Ще не маєте акаунта?
