@@ -1,12 +1,14 @@
 ﻿from functools import wraps
 from datetime import datetime
 from email.message import EmailMessage
+import re
 import os
 import secrets
 import smtplib
 from uuid import uuid4
 
 from flask import Flask, flash, redirect, render_template, request, session, url_for
+import requests
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_, text
 from sqlalchemy.exc import IntegrityError
@@ -34,6 +36,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID') or config.GOOGLE_CLIENT_ID
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET') or config.GOOGLE_CLIENT_SECRET
+RECAPTCHA_SITE_KEY = os.getenv('RECAPTCHA_SITE_KEY') or getattr(config, 'RECAPTCHA_SITE_KEY', '')
+RECAPTCHA_SECRET_KEY = os.getenv('RECAPTCHA_SECRET_KEY') or getattr(config, 'RECAPTCHA_SECRET_KEY', '')
+RECAPTCHA_MIN_SCORE = float(os.getenv('RECAPTCHA_MIN_SCORE') or getattr(config, 'RECAPTCHA_MIN_SCORE', 0.5))
 MAIL_SERVER = os.getenv('MAIL_SERVER') or getattr(config, 'MAIL_SERVER', '')
 MAIL_PORT = int(os.getenv('MAIL_PORT') or getattr(config, 'MAIL_PORT', 587))
 MAIL_USE_TLS = (os.getenv('MAIL_USE_TLS') or str(getattr(config, 'MAIL_USE_TLS', 'true'))).lower() in {'1', 'true', 'yes', 'on'}
@@ -111,6 +116,60 @@ def get_token_serializer():
 
 def hash_password(password):
     return generate_password_hash(password)
+
+
+def validate_password_strength(password):
+    if len(password) < 8:
+        return 'Пароль має містити щонайменше 8 символів'
+    if not re.search(r'[A-Z]', password):
+        return 'Пароль має містити хоча б одну велику літеру'
+    if not re.search(r'[a-z]', password):
+        return 'Пароль має містити хоча б одну малу літеру'
+    if not re.search(r'\d', password):
+        return 'Пароль має містити хоча б одну цифру'
+    if not re.search(r'[^A-Za-z0-9]', password):
+        return 'Пароль має містити хоча б один спеціальний символ'
+    return None
+
+
+def is_recaptcha_configured():
+    return bool(RECAPTCHA_SITE_KEY and RECAPTCHA_SECRET_KEY)
+
+
+def validate_recaptcha_token(recaptcha_token, expected_action):
+    if not is_recaptcha_configured():
+        return None
+
+    if not recaptcha_token:
+        return 'Підтвердіть, що ви не робот, через Google reCAPTCHA'
+
+    try:
+        response = requests.post(
+            'https://www.google.com/recaptcha/api/siteverify',
+            data={
+                'secret': RECAPTCHA_SECRET_KEY,
+                'response': recaptcha_token,
+                'remoteip': request.remote_addr,
+            },
+            timeout=10,
+        )
+        payload = response.json()
+    except requests.RequestException:
+        return 'Не вдалося перевірити Google reCAPTCHA. Спробуйте ще раз трохи пізніше'
+
+    if not payload.get('success'):
+        return 'Google reCAPTCHA не пройдена. Спробуйте ще раз'
+
+    action = payload.get('action')
+    score = float(payload.get('score') or 0)
+
+    if action != expected_action:
+        return 'Google reCAPTCHA повернула некоректну дію. Спробуйте ще раз'
+
+    if score < RECAPTCHA_MIN_SCORE:
+        return 'Перевірка Google reCAPTCHA не пройдена. Спробуйте ще раз'
+
+    return None
 
 
 def verify_password(user, password):
@@ -247,6 +306,8 @@ def inject_user():
         'user': current_user.username if current_user else None,
         'current_user': current_user,
         'google_auth_enabled': google_oauth is not None,
+        'recaptcha_enabled': is_recaptcha_configured(),
+        'recaptcha_site_key': RECAPTCHA_SITE_KEY,
         'mail_configured': is_mail_configured(),
     }
 
@@ -470,6 +531,13 @@ def login():
     if request.method == 'POST':
         login_value = request.form['username'].strip()
         password = request.form['password']
+        recaptcha_error = validate_recaptcha_token(
+            request.form.get('g-recaptcha-response', ''),
+            expected_action='login',
+        )
+        if recaptcha_error:
+            flash(recaptcha_error)
+            return render_template('login.html')
         search_value = normalize_email(login_value)
         user = User.query.filter(
             or_(
@@ -598,8 +666,9 @@ def reset_password(token):
         password = request.form['password']
         confirm_password = request.form['confirm_password']
 
-        if len(password) < 8:
-            flash('Пароль має містити щонайменше 8 символів')
+        password_error = validate_password_strength(password)
+        if password_error:
+            flash(password_error)
             return render_template('reset_password.html', token=token)
 
         if password != confirm_password:
@@ -688,9 +757,17 @@ def register():
         username = request.form['username'].strip()
         email = normalize_email(request.form['email'])
         password = request.form['password']
+        recaptcha_error = validate_recaptcha_token(
+            request.form.get('g-recaptcha-response', ''),
+            expected_action='register',
+        )
+        if recaptcha_error:
+            flash(recaptcha_error)
+            return render_template('register.html')
 
-        if len(password) < 8:
-            flash('Пароль має містити щонайменше 8 символів')
+        password_error = validate_password_strength(password)
+        if password_error:
+            flash(password_error)
             return render_template('register.html')
 
         if not email:

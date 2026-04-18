@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="page page-auth page-auth-register">
+    {% if recaptcha_enabled %}
+    <script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}" async defer></script>
+    {% endif %}
     {% include "header.html" %}
 
     <main class="page-main auth-page">
@@ -48,7 +51,7 @@
                     </div>
                     {% endif %}
 
-                    <form method="POST" class="auth-form">
+                    <form method="POST" class="auth-form" data-recaptcha-action="register">
                         <div class="field">
                             <label for="username">Логін</label>
                             <input id="username" type="text" name="username" placeholder="Оберіть логін" required>
@@ -61,8 +64,18 @@
 
                         <div class="field">
                             <label for="password">Пароль</label>
-                            <input id="password" type="password" name="password" placeholder="Створіть пароль" minlength="8" required>
+                            <input id="password" type="password" name="password" placeholder="Створіть пароль" minlength="8" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}" title="Мінімум 8 символів, одна велика літера, одна мала літера, одна цифра і один спеціальний символ." required>
+                            <small>Мінімум 8 символів, велика і мала літера, цифра та спеціальний символ.</small>
                         </div>
+
+                        {% if recaptcha_enabled %}
+                        <input type="hidden" name="g-recaptcha-response">
+                        <p class="auth-helper">Google reCAPTCHA v3 працює у фоні під час реєстрації.</p>
+                        {% else %}
+                        <div class="flash-message flash-message--info">
+                            Google reCAPTCHA v3 запрацює тут після додавання `RECAPTCHA_SITE_KEY` і `RECAPTCHA_SECRET_KEY`.
+                        </div>
+                        {% endif %}
 
                         <button class="submit_btn" type="submit">Зареєструватися</button>
                     </form>
@@ -75,5 +88,56 @@
             </section>
         </section>
     </main>
+    {% if recaptcha_enabled %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.querySelector('.auth-form[data-recaptcha-action]');
+            if (!form) {
+                return;
+            }
+
+            let isSubmitting = false;
+            const submitButton = form.querySelector('button[type="submit"]');
+
+            function showRecaptchaMessage(message) {
+                let messageBox = form.querySelector('.flash-message.flash-message--info.recaptcha-status');
+                if (!messageBox) {
+                    messageBox = document.createElement('div');
+                    messageBox.className = 'flash-message flash-message--info recaptcha-status';
+                    form.insertBefore(messageBox, submitButton);
+                }
+                messageBox.textContent = message;
+            }
+
+            form.addEventListener('submit', function (event) {
+                if (isSubmitting) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                if (typeof grecaptcha === 'undefined') {
+                    showRecaptchaMessage('Google reCAPTCHA v3 ще завантажується. Зачекайте кілька секунд і спробуйте ще раз.');
+                    return;
+                }
+
+                grecaptcha.ready(function () {
+                    grecaptcha.execute('{{ recaptcha_site_key }}', {
+                        action: form.dataset.recaptchaAction
+                    }).then(function (token) {
+                        const tokenField = form.querySelector('input[name="g-recaptcha-response"]');
+                        if (tokenField) {
+                            tokenField.value = token;
+                        }
+                        isSubmitting = true;
+                        form.submit();
+                    }).catch(function () {
+                        showRecaptchaMessage('Не вдалося отримати токен Google reCAPTCHA v3. Перевірте ключі або спробуйте ще раз.');
+                    });
+                });
+            });
+        });
+    </script>
+    {% endif %}
 </body>
 </html>
