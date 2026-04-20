@@ -201,6 +201,12 @@ img {
     font-weight: 600;
 }
 
+.flash-message.is-hiding {
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
 .flash-message--info {
     background: #e8f4ff;
     color: #185f94;
@@ -267,6 +273,41 @@ img {
     font-size: 22px;
     font-weight: 800;
     letter-spacing: 0.01em;
+}
+
+.site-nav-toggle {
+    display: none;
+    width: 48px;
+    height: 48px;
+    border: 1px solid rgba(35, 49, 59, 0.12);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.72);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(35, 49, 59, 0.08);
+}
+
+.site-nav-toggle span {
+    width: 18px;
+    height: 2px;
+    border-radius: 999px;
+    background: var(--text);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.site-nav-toggle.is-open span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.site-nav-toggle.is-open span:nth-child(2) {
+    opacity: 0;
+}
+
+.site-nav-toggle.is-open span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
 }
 
 .site-nav {
@@ -435,6 +476,7 @@ img {
     display: flex;
     gap: 12px;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .results-counter {
@@ -799,6 +841,7 @@ img {
 
 .form-submit .submit_btn {
     min-width: 260px;
+    max-width: 100%;
 }
 
 /* cabinet.html */
@@ -978,6 +1021,7 @@ img {
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-wrap: wrap;
 }
 
 .user-ad-card__actions form {
@@ -1120,7 +1164,12 @@ img {
     }
 
     .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 18px;
+    }
+
+    .search-form__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .auth-hero,
@@ -1137,6 +1186,12 @@ img {
     .user-ad-card__actions {
         justify-content: flex-start;
     }
+
+    .profile-ads__header,
+    .section-heading,
+    .search-panel__header {
+        align-items: flex-start;
+    }
 }
 
 @media (max-width: 760px) {
@@ -1146,13 +1201,33 @@ img {
     }
 
     .site-header__inner {
-        align-items: flex-start;
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 0;
+    }
+
+    .site-nav-toggle {
+        display: inline-flex;
     }
 
     .site-nav {
+        display: none;
+        grid-column: 1 / -1;
         width: 100%;
         justify-content: flex-start;
+        padding-top: 8px;
+    }
+
+    .site-nav.is-open {
+        display: flex;
+    }
+
+    .site-nav__link,
+    .site-nav__user {
+        width: 100%;
+        justify-content: center;
     }
 
     .form-block,
@@ -1163,6 +1238,10 @@ img {
     .cabinet-summary,
     .search-panel {
         padding: 22px;
+    }
+
+    .page-main {
+        padding: 20px 0 44px;
     }
 
     .home-hero__content h1,
@@ -1184,6 +1263,17 @@ img {
     .section-heading {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .cards,
+    .search-form__grid,
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .comment-item__meta {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
 
@@ -1211,5 +1301,55 @@ img {
     .profile-card__header {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .site-brand {
+        gap: 10px;
+    }
+
+    .logo {
+        width: 50px;
+        height: 50px;
+    }
+
+    .section-tag {
+        font-size: 11px;
+        padding: 7px 11px;
+    }
+
+    .home-hero__content,
+    .cabinet-hero__content,
+    .hero-stat,
+    .hero-note,
+    .cabinet-summary {
+        padding: 20px;
+    }
+
+    .hero-stat strong,
+    .cabinet-summary strong {
+        font-size: 44px;
+    }
+
+    .card h3,
+    .user-ad-card__body h3 {
+        font-size: 22px;
+    }
+
+    .btn,
+    .submit_btn,
+    .reveal-phone-btn,
+    .type_btn span,
+    .search-form__actions .btn {
+        min-height: 48px;
+    }
+
+    .lightbox {
+        padding: 14px;
+    }
+
+    .lightbox .close {
+        top: 10px;
+        right: 16px;
+        font-size: 36px;
     }
 }

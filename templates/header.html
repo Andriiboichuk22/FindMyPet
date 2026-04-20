@@ -5,7 +5,19 @@
             <span class="site-brand__text">FindMyPet</span>
         </a>
 
-        <nav class="site-nav" aria-label="Основна навігація">
+        <button
+            type="button"
+            class="site-nav-toggle"
+            aria-expanded="false"
+            aria-controls="site-nav"
+            aria-label="Відкрити меню"
+        >
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <nav id="site-nav" class="site-nav" aria-label="Основна навігація">
             <a class="site-nav__link" href="{{ url_for('home') }}">Оголошення</a>
             <a class="site-nav__link site-nav__link--accent" href="{{ url_for('add') }}">Додати оголошення</a>
 
@@ -22,3 +34,4 @@
         </nav>
     </div>
 </header>
+<script src="{{ url_for('static', filename='js/script.js') }}" defer></script>

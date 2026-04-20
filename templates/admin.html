@@ -68,7 +68,7 @@
                         {% if pet.user_id == current_user.id %}
                         <a class="btn btn-secondary" href="{{ url_for('edit_pet', pet_id=pet.id) }}">Редагувати</a>
                         {% endif %}
-                        <form method="POST" action="{{ url_for('delete_pet', pet_id=pet.id) }}" onsubmit="return confirm('Точно видалити це оголошення?');">
+                        <form method="POST" action="{{ url_for('delete_pet', pet_id=pet.id) }}" data-confirm="Точно видалити це оголошення?">
                             <button class="btn btn-danger" type="submit">Видалити</button>
                         </form>
                     </div>
