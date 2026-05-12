@@ -2,7 +2,26 @@ import os
 
 from flask import Flask
 
-import config
+try:
+    import config
+except ModuleNotFoundError:
+    class config:  # type: ignore[no-redef]
+        FLASK_SECRET_KEY = ''
+        GOOGLE_CLIENT_ID = ''
+        GOOGLE_CLIENT_SECRET = ''
+        RECAPTCHA_SITE_KEY = ''
+        RECAPTCHA_SECRET_KEY = ''
+        RECAPTCHA_MIN_SCORE = 0.5
+        MAIL_SERVER = ''
+        MAIL_PORT = 587
+        MAIL_USE_TLS = True
+        MAIL_USERNAME = ''
+        MAIL_PASSWORD = ''
+        MAIL_FROM = ''
+        PASSWORD_RESET_SALT = 'password-reset-salt'
+        PASSWORD_RESET_EXPIRES_MINUTES = 30
+        EMAIL_VERIFICATION_SALT = 'email-verification-salt'
+        EMAIL_VERIFICATION_EXPIRES_HOURS = 24
 from auth_helpers import get_current_user, is_mail_configured, is_recaptcha_configured
 from bootstrap import init_app_data
 from extensions import db, get_google_oauth, setup_google_oauth
