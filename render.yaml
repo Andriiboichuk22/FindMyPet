@@ -1,0 +1,42 @@
+services:
+  - type: web
+    name: findmypet-demo
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: FLASK_SECRET_KEY
+        generateValue: true
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: MAIL_SERVER
+        sync: false
+      - key: MAIL_PORT
+        sync: false
+      - key: MAIL_USE_TLS
+        sync: false
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: RECAPTCHA_SITE_KEY
+        sync: false
+      - key: RECAPTCHA_SECRET_KEY
+        sync: false
+      - key: RECAPTCHA_MIN_SCORE
+        value: "0.5"
+      - key: PASSWORD_RESET_SALT
+        value: password-reset-salt
+      - key: PASSWORD_RESET_EXPIRES_MINUTES
+        value: "30"
+      - key: EMAIL_VERIFICATION_SALT
+        value: email-verification-salt
+      - key: EMAIL_VERIFICATION_EXPIRES_HOURS
+        value: "24"
